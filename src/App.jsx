@@ -5,6 +5,7 @@ import CRM from "./CRM/Crm";
 import "./App.scss";
 import LeadsTabs from "./CRM/Funnel/LeadsTabs/LeadsTabs";
 import FunnelTabs from "./CRM/Funnel/FunnelTabs";
+import WhatsappModule from "./WhatsappDirect/WhatsappModule";
 
 const PrivateRoute = ({ children }) => {
   const hasToken = Boolean(localStorage.getItem("access")); // ← ВАЖНО!
@@ -22,6 +23,7 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+                <Route path="/wh" element={<WhatsappModule />} />
 
         <Route
           path="/crm/*"

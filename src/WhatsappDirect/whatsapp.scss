@@ -1,0 +1,56 @@
+.ws {
+  display: flex;
+  height: 100vh;
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.ws-sidebar {
+  width: 280px;
+  background: #111;
+  color: #fff;
+
+  &__item {
+    padding: 12px;
+    cursor: pointer;
+
+    &:hover {
+      background: #222;
+    }
+  }
+}
+
+.ws-chat {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+
+  &__msg {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    max-width: 60%;
+
+    &--me {
+      background: #25d366;
+      align-self: flex-end;
+    }
+
+    &--client {
+      background: #333;
+    }
+  }
+}
+
+.ws-input {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #333;
+
+  input {
+    flex: 1;
+  }
+}
