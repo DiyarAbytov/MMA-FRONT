@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { api } from "../api/whatsappApi";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001");
+const socket = io("http://5.129.222.232:3001");
+
 
 export const useMessages = (chatId) => {
   const [messages, setMessages] = useState([]);
