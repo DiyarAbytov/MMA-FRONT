@@ -1,0 +1,47 @@
+import React, { useState } from "react";
+import Sidebar from "./sidebar/Sidebar";
+import ChatHeader from "./chat/ChatHeader";
+import ChatWindow from "./chat/ChatWindow";
+import MessageInput from "./input/MessageInput";
+import "./whatsapp.scss";
+
+const WhatsappModule = () => {
+  const [activeDialog, setActiveDialog] = useState(null);
+  const [replyTo, setReplyTo] = useState(null);
+
+  const handleSelectDialog = (dialog) => {
+    setActiveDialog(dialog);
+    setReplyTo(null);
+  };
+
+  const handleReply = (message) => {
+    setReplyTo(message);
+  };
+
+  const clearReply = () => {
+    setReplyTo(null);
+  };
+
+  return (
+    <div className="wa">
+      <Sidebar
+        activeChatId={activeDialog ? activeDialog.chatId : null}
+        onSelect={handleSelectDialog}
+      />
+      <div className="wa__main">
+        <ChatHeader dialog={activeDialog} />
+        <ChatWindow
+          chatId={activeDialog ? activeDialog.chatId : null}
+          onReply={handleReply}
+        />
+        <MessageInput
+          chatId={activeDialog ? activeDialog.chatId : null}
+          replyTo={replyTo}
+          clearReply={clearReply}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default WhatsappModule;
