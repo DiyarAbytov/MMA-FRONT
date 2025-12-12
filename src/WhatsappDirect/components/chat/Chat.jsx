@@ -50,15 +50,12 @@ const Chat = ({ chatId }) => {
     try {
       setLoadingMore(true);
       const r = await api.get(
-        `/messages/${encodeURIComponent(chatId)}?before=${encodeURIComponent(
-          oldestTs
-        )}&limit=15`
+        `/messages/${encodeURIComponent(chatId)}?before=${encodeURIComponent(oldestTs)}&limit=15`
       );
       const arr = Array.isArray(r.data) ? r.data : [];
       if (!arr.length) return;
 
       setMessages((prev) => {
-        // добавляем сверху, без дублей по id
         const seen = new Set(prev.map((m) => m.id));
         const add = arr.filter((m) => !seen.has(m.id));
         return [...add, ...prev];
@@ -70,23 +67,41 @@ const Chat = ({ chatId }) => {
     }
   };
 
+  // ✅ ВАЖНО: polling должен работать даже если lastTs=0
+  // если lastTs=0 — просто периодически подгружаем latest и мерджим
   const pollNew = async () => {
-    if (!chatId || !lastTs) return;
+    if (!chatId) return;
+
     try {
-      const r = await api.get(
-        `/messages/${encodeURIComponent(chatId)}?after=${encodeURIComponent(lastTs)}`
-      );
-      const arr = Array.isArray(r.data) ? r.data : [];
-      if (!arr.length) return;
+      if (lastTs > 0) {
+        const r = await api.get(
+          `/messages/${encodeURIComponent(chatId)}?after=${encodeURIComponent(lastTs)}`
+        );
+        const arr = Array.isArray(r.data) ? r.data : [];
+        if (!arr.length) return;
 
-      setMessages((prev) => {
-        const seen = new Set(prev.map((m) => m.id));
-        const add = arr.filter((m) => !seen.has(m.id));
-        if (!add.length) return prev;
-        return [...prev, ...add];
-      });
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          const add = arr.filter((m) => !seen.has(m.id));
+          if (!add.length) return prev;
+          return [...prev, ...add];
+        });
+      } else {
+        // lastTs=0 => чата ещё нет в состоянии (или пусто),
+        // берём latest и добавляем что новое
+        const r = await api.get(`/messages/${encodeURIComponent(chatId)}?limit=15`);
+        const arr = Array.isArray(r.data) ? r.data : [];
+        if (!arr.length) return;
 
-      // если пользователь внизу — прокручиваем
+        setMessages((prev) => {
+          if (!prev.length) return arr;
+          const seen = new Set(prev.map((m) => m.id));
+          const add = arr.filter((m) => !seen.has(m.id));
+          if (!add.length) return prev;
+          return [...prev, ...add].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        });
+      }
+
       const el = scrollerRef.current;
       if (el) {
         const nearBottom = el.scrollHeight - (el.scrollTop + el.clientHeight) < 120;
@@ -98,18 +113,19 @@ const Chat = ({ chatId }) => {
   };
 
   useEffect(() => {
-    // сброс при смене чата
     setMessages([]);
     setText("");
     setSearch("");
 
+    if (pollRef.current) clearInterval(pollRef.current);
     if (!chatId) return;
 
     loadLatest(chatId);
 
-    // polling новых сообщений (без WS)
-    pollRef.current = setInterval(pollNew, 5000);
-    return () => clearInterval(pollRef.current);
+    pollRef.current = setInterval(pollNew, 3000); // 3 сек норм
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
@@ -131,7 +147,7 @@ const Chat = ({ chatId }) => {
       setMessages((prev) => {
         const seen = new Set(prev.map((m) => m.id));
         if (msg?.id && seen.has(msg.id)) return prev;
-        return [...prev, msg];
+        return [...prev, msg].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
       });
 
       setText("");
@@ -192,9 +208,7 @@ const Chat = ({ chatId }) => {
           return (
             <div
               key={m.id + "_" + m.timestamp}
-              className={
-                "wa-chat__msg " + (mine ? "wa-chat__msg--me" : "wa-chat__msg--client")
-              }
+              className={"wa-chat__msg " + (mine ? "wa-chat__msg--me" : "wa-chat__msg--client")}
             >
               <div className="wa-chat__bubble">
                 {m.text && <div className="wa-chat__text">{m.text}</div>}

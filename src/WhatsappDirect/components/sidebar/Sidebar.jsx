@@ -76,7 +76,7 @@ const Sidebar = ({ activeChatId, onSelectChat }) => {
     loadDialogs();
 
     // мягкий пуллинг (без GreenAPI, только твой Node)
-    pollRef.current = setInterval(loadDialogs, 20000);
+    pollRef.current = setInterval(loadDialogs, 7000);
     return () => clearInterval(pollRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
