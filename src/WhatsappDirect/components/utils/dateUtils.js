@@ -1,3 +1,5 @@
+// src/WhatsappDirect/components/utils/dateUtils.js
+
 const pad2 = (n) => (n < 10 ? "0" + n : "" + n);
 
 // формат времени HH:MM
@@ -29,12 +31,13 @@ export const formatDayLabel = (ts) => {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`;
 };
 
-// группируем сообщения по дню
+// группируем сообщения по дню (С ЗАЩИТОЙ)
 export const groupByDay = (messages) => {
+  const list = Array.isArray(messages) ? messages : [];
   const groups = [];
   let current = null;
 
-  for (const m of messages) {
+  for (const m of list) {
     const ts = m.timestamp || Date.now();
     const d = new Date(ts);
     const key = d.toDateString();

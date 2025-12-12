@@ -1,5 +1,8 @@
 import React from "react";
 import { displayNameForDialog, stripWhatsAppSuffix } from "../utils/chatUtils";
+// chat/ChatHeader.jsx
+import "./whatsapp-header.scss";
+
 
 const ChatHeader = ({ dialog }) => {
   if (!dialog) {

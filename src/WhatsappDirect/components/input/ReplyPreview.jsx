@@ -1,4 +1,7 @@
 import React from "react";
+// input/ReplyPreview.jsx
+import "./whatsapp-reply.scss";
+
 
 const ReplyPreview = ({ replyTo, onClear }) => {
   if (!replyTo) return null;

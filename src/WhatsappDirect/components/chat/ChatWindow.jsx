@@ -3,6 +3,9 @@ import useMessages from "../hooks/useMessages";
 import { groupByDay } from "../utils/dateUtils";
 import ChatDayGroup from "./ChatDayGroup";
 import ChatContextMenu from "./ChatContextMenu";
+// chat/ChatWindow.jsx
+import "./whatsapp-chat.scss";
+
 
 const ChatWindow = ({ chatId, onReply }) => {
   const messages = useMessages(chatId);

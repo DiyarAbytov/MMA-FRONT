@@ -1,4 +1,7 @@
 import React from "react";
+// input/FilePreview.jsx
+import "./whatsapp-file.scss";
+
 
 const FilePreview = ({ file, onRemove }) => {
   if (!file) return null;

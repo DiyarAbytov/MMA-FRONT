@@ -1,22 +1,36 @@
+// src/WhatsappDirect/input/MessageInput.jsx
 import React, { useState } from "react";
 import { FiPaperclip, FiSend } from "react-icons/fi";
 import { api } from "../../api/whatsappApi";
 import ReplyPreview from "./ReplyPreview";
 import FilePreview from "./FilePreview";
+import "./whatsapp-input.scss";
+
+const MSG_EVENT = "wa:newMessage";      // для списка сообщений
+const DIALOG_EVENT = "wa:lastMessage";  // для сайдбара
 
 const MessageInput = ({ chatId, replyTo, clearReply }) => {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
 
   const trimmed = text.trim();
-  const canSend = Boolean(chatId) && (Boolean(trimmed) || Boolean(file));
+  const canSend =
+    Boolean(chatId) && (Boolean(trimmed) || Boolean(file));
 
   const resetState = () => {
     setText("");
     setFile(null);
-    if (clearReply) {
-      clearReply();
-    }
+    if (clearReply) clearReply();
+  };
+
+  const notifyFrontend = (chatId, msg) => {
+    if (!chatId || !msg) return;
+    window.dispatchEvent(
+      new CustomEvent(MSG_EVENT, { detail: { chatId, message: msg } })
+    );
+    window.dispatchEvent(
+      new CustomEvent(DIALOG_EVENT, { detail: { chatId, message: msg } })
+    );
   };
 
   const send = async () => {
@@ -30,16 +44,16 @@ const MessageInput = ({ chatId, replyTo, clearReply }) => {
         formData.append("file", file);
 
         await api.post("/send-file", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
+        // файлы в истории появятся при следующей загрузке,
+        // превью подтянется через /dialogs, дублей не будет
         resetState();
         return;
       }
 
-      await api.post("/send", {
+      const response = await api.post("/send", {
         chatId,
         text: trimmed,
         replyTo: replyTo
@@ -47,9 +61,12 @@ const MessageInput = ({ chatId, replyTo, clearReply }) => {
           : null,
       });
 
+      const msg = response.data;
+      notifyFrontend(chatId, msg);
+
       resetState();
-    } catch (_error) {
-      // можно повесить тост, в консоль ничего лишнего
+    } catch (_e) {
+      // можно повесить тост
     }
   };
 
@@ -61,7 +78,8 @@ const MessageInput = ({ chatId, replyTo, clearReply }) => {
   };
 
   const handleFileChange = (event) => {
-    const selected = event.target.files && event.target.files[0];
+    const selected =
+      event.target.files && event.target.files[0];
     if (!selected) return;
     setFile(selected);
   };
@@ -85,7 +103,7 @@ const MessageInput = ({ chatId, replyTo, clearReply }) => {
           className="whatsapp-input__textarea"
           placeholder="Введите сообщение"
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
         />
 
