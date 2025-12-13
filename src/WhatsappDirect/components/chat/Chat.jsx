@@ -21,8 +21,15 @@ const Chat = ({ chatId }) => {
   const pollRef = useRef(null);
   const scrollerRef = useRef(null);
 
+  // ✅ ФИКС: всегда иметь актуальный lastTs внутри setInterval
+  const lastTsRef = useRef(0);
+
   const lastTs = messages.length ? messages[messages.length - 1].timestamp : 0;
   const oldestTs = messages.length ? messages[0].timestamp : 0;
+
+  useEffect(() => {
+    lastTsRef.current = lastTs || 0;
+  }, [lastTs]);
 
   const scrollToBottom = () => {
     const el = scrollerRef.current;
@@ -67,15 +74,16 @@ const Chat = ({ chatId }) => {
     }
   };
 
-  // ✅ ВАЖНО: polling должен работать даже если lastTs=0
-  // если lastTs=0 — просто периодически подгружаем latest и мерджим
   const pollNew = async () => {
     if (!chatId) return;
 
+    // ✅ берём актуальный lastTs (не из замыкания)
+    const last = lastTsRef.current || 0;
+
     try {
-      if (lastTs > 0) {
+      if (last > 0) {
         const r = await api.get(
-          `/messages/${encodeURIComponent(chatId)}?after=${encodeURIComponent(lastTs)}`
+          `/messages/${encodeURIComponent(chatId)}?after=${encodeURIComponent(last)}`
         );
         const arr = Array.isArray(r.data) ? r.data : [];
         if (!arr.length) return;
@@ -84,11 +92,9 @@ const Chat = ({ chatId }) => {
           const seen = new Set(prev.map((m) => m.id));
           const add = arr.filter((m) => !seen.has(m.id));
           if (!add.length) return prev;
-          return [...prev, ...add];
+          return [...prev, ...add]; // after уже приходит по возрастанию
         });
       } else {
-        // lastTs=0 => чата ещё нет в состоянии (или пусто),
-        // берём latest и добавляем что новое
         const r = await api.get(`/messages/${encodeURIComponent(chatId)}?limit=15`);
         const arr = Array.isArray(r.data) ? r.data : [];
         if (!arr.length) return;
@@ -122,7 +128,7 @@ const Chat = ({ chatId }) => {
 
     loadLatest(chatId);
 
-    pollRef.current = setInterval(pollNew, 3000); // 3 сек норм
+    pollRef.current = setInterval(pollNew, 3000); // хочешь 2с — поставь 2000
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
