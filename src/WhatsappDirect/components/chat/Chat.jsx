@@ -21,11 +21,17 @@ const Chat = ({ chatId }) => {
   const pollRef = useRef(null);
   const scrollerRef = useRef(null);
 
-  // ✅ ФИКС: всегда иметь актуальный lastTs внутри setInterval
+  // ✅ FIX: refs чтобы interval всегда видел актуальные значения
+  const chatIdRef = useRef(null);
   const lastTsRef = useRef(0);
 
   const lastTs = messages.length ? messages[messages.length - 1].timestamp : 0;
   const oldestTs = messages.length ? messages[0].timestamp : 0;
+
+  // ✅ обновляем refs при изменениях
+  useEffect(() => {
+    chatIdRef.current = chatId || null;
+  }, [chatId]);
 
   useEffect(() => {
     lastTsRef.current = lastTs || 0;
@@ -74,16 +80,17 @@ const Chat = ({ chatId }) => {
     }
   };
 
+  // ✅ FIX: pollNew читает chatId/lastTs только из ref (иначе stale closure)
   const pollNew = async () => {
-    if (!chatId) return;
+    const cid = chatIdRef.current;
+    if (!cid) return;
 
-    // ✅ берём актуальный lastTs (не из замыкания)
-    const last = lastTsRef.current || 0;
+    const currentLastTs = lastTsRef.current || 0;
 
     try {
-      if (last > 0) {
+      if (currentLastTs > 0) {
         const r = await api.get(
-          `/messages/${encodeURIComponent(chatId)}?after=${encodeURIComponent(last)}`
+          `/messages/${encodeURIComponent(cid)}?after=${encodeURIComponent(currentLastTs)}`
         );
         const arr = Array.isArray(r.data) ? r.data : [];
         if (!arr.length) return;
@@ -92,10 +99,10 @@ const Chat = ({ chatId }) => {
           const seen = new Set(prev.map((m) => m.id));
           const add = arr.filter((m) => !seen.has(m.id));
           if (!add.length) return prev;
-          return [...prev, ...add]; // after уже приходит по возрастанию
+          return [...prev, ...add];
         });
       } else {
-        const r = await api.get(`/messages/${encodeURIComponent(chatId)}?limit=15`);
+        const r = await api.get(`/messages/${encodeURIComponent(cid)}?limit=15`);
         const arr = Array.isArray(r.data) ? r.data : [];
         if (!arr.length) return;
 
@@ -128,7 +135,7 @@ const Chat = ({ chatId }) => {
 
     loadLatest(chatId);
 
-    pollRef.current = setInterval(pollNew, 3000); // хочешь 2с — поставь 2000
+    pollRef.current = setInterval(pollNew, 3000); // 3 сек норм
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
