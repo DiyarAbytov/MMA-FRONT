@@ -310,8 +310,7 @@ import "./whatsapp-sidebar.scss";
 
 // ====== Django leads API (заявки) ======
 const LEADS_API = axios.create({
-  // поставь свой URL, если другой
-  baseURL: import.meta?.env?.VITE_LEADS_API_URL || "https://rasu0101.pythonanywhere.com",
+  baseURL: process.env.REACT_APP_LEADS_API_URL || "https://rasu0101.pythonanywhere.com",
 });
 
 // ====== helpers ======
