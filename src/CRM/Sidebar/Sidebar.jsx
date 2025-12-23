@@ -83,6 +83,13 @@ const Sidebar = () => {
         label: "Регистрация",
         roles: ["admin"], // как Register в AdminPanel
       },
+      // {
+      //   route: "/crm/b-operations",
+      //   icon: <FaUserTie className="sidebar__icon" />,
+      //   label: "Финансы и персонал",
+      //   roles: ["admin"], // как Users в AdminPanel
+      // },
+
       {
         route: "/crm/whatsapp",
         icon: <FaWhatsapp className="sidebar__icon" />,
