@@ -293,7 +293,7 @@ const Sidebar = ({ activeChatId, onSelectChat }) => {
                 : "Create a new request from this chat"
             }
           >
-            {hasRequestForChat(menu.chat) ? "Already in requests" : "Send to request"}
+            {hasRequestForChat(menu.chat) ? "Already in requests" : "Отправить в Заявки"}
           </button>
         </div>
       ) : null}
